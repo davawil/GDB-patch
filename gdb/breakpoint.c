@@ -9242,7 +9242,7 @@ init_breakpoint_sal (struct breakpoint *b, struct gdbarch *gdbarch,
   if (type == bp_hardware_breakpoint)
     {
       int target_resources_ok;
-
+      printf("David was here\n");
       i = hw_breakpoint_used_count ();
       target_resources_ok =
 	target_can_use_hardware_watchpoint (bp_hardware_breakpoint,

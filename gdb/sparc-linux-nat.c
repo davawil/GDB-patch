@@ -53,6 +53,17 @@ fill_fpregset (const struct regcache *regcache,
   sparc32_collect_fpregset (sparc_fpregmap, regcache, regnum, fpregs);
 }
 
+/*Added by David Wilkins*/
+
+static int sparc_can_use_hw_breakpoint (struct target_ops *,
+				     enum bptype, int, int);
+static 
+int sparc_can_use_hw_breakpoint (struct target_ops *t,
+			enum bptype arg1, int arg2, int arg3)
+{
+		return 1;				 
+}
+
 void _initialize_sparc_linux_nat (void);
 
 void
@@ -68,6 +79,7 @@ _initialize_sparc_linux_nat (void)
   /* Add our register access methods.  */
   t->to_fetch_registers = sparc_fetch_inferior_registers;
   t->to_store_registers = sparc_store_inferior_registers;
+  t->to_can_use_hw_breakpoint = sparc_can_use_hw_breakpoint; 		//added by David Wilkins
 
   /* Register the target.  */
   linux_nat_add_target (t);

@@ -9242,17 +9242,18 @@ init_breakpoint_sal (struct breakpoint *b, struct gdbarch *gdbarch,
   if (type == bp_hardware_breakpoint)
     {
       int target_resources_ok;
-      printf("David was here\n");
       i = hw_breakpoint_used_count ();
       target_resources_ok =
 	target_can_use_hardware_watchpoint (bp_hardware_breakpoint,
 					    i + 1, 0);
+	//error (_("David was here"));
+	
       if (target_resources_ok == 0)
 	error (_("No hardware breakpoint support in the target."));
       else if (target_resources_ok < 0)
 	error (_("Hardware breakpoints used exceeds limit."));
+	 
     }
-
   gdb_assert (sals.nelts > 0);
 
   for (i = 0; i < sals.nelts; ++i)

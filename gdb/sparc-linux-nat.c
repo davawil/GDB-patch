@@ -27,6 +27,14 @@
 #include "inferior.h"
 #include "target.h"
 #include "linux-nat.h"
+//added by David Wilkins
+#include "break-common.h"
+#include "nat/gdb_ptrace.h"
+#include "nat/linux-ptrace.h"
+
+#ifndef PTRACE_SETHBREGS
+#define PTRACE_SETHBREGS 27
+#endif /*PTRACE_SETHBREGS*/
 
 void
 supply_gregset (struct regcache *regcache, const prgregset_t *gregs)
@@ -55,11 +63,56 @@ fill_fpregset (const struct regcache *regcache,
 
 /*Added by David Wilkins*/
 
-static int sparc_can_use_hw_breakpoint (struct target_ops *,
+struct sparc_linux_hw_breakpoint{
+	unsigned int address;
+	enum target_hw_bp_type type;
+	//add control bits
+};
+
+static int sparc_linux_can_use_hw_breakpoint (struct target_ops *,
 				     enum bptype, int, int);
 static 
-int sparc_can_use_hw_breakpoint (struct target_ops *t,
+int sparc_linux_can_use_hw_breakpoint (struct target_ops *t,
 			enum bptype arg1, int arg2, int arg3)
+{
+	printf("can use\n");
+		return 1;				 
+}
+/*place address correctly*/
+static CORE_ADDR sparc_place_addr(CORE_ADDR addr){
+	int int_addr = ((unsigned int) addr);
+	//clear two LSBs
+	return (CORE_ADDR)(int_addr & 0xfffffffc);
+}
+static int sparc_linux_insert_hw_breakpoint (struct target_ops *,
+				     struct gdbarch *, struct bp_target_info *);
+static 
+int sparc_linux_insert_hw_breakpoint (struct target_ops *ops,
+				     struct gdbarch *arch, struct bp_target_info *info)
+{
+	
+  struct sparc_linux_hw_breakpoint bp;
+  int inf_pid;
+  int r = 1;
+  printf("insert1\n");
+  CORE_ADDR address = sparc_place_addr(info->reqstd_address);
+  info->placed_address = address;
+  bp.address = (unsigned int) address;
+  bp.type = hw_execute;
+  
+  inf_pid = ptid_get_pid(inferior_ptid);
+  //use address br_address and type as data
+  printf("insert2\n");
+  r = ptrace(PTRACE_SETHBREGS, inf_pid, bp.address, hw_execute);
+  printf("insert3\n");
+  return r;
+}
+
+static int sparc_linux_remove_hw_breakpoint (struct target_ops *,
+				     struct gdbarch *, struct bp_target_info *);
+static 
+int sparc_linux_remove_hw_breakpoint (struct target_ops *ops,
+				     struct gdbarch *arch, struct bp_target_info *info)
 {
 		return 1;				 
 }
@@ -79,8 +132,9 @@ _initialize_sparc_linux_nat (void)
   /* Add our register access methods.  */
   t->to_fetch_registers = sparc_fetch_inferior_registers;
   t->to_store_registers = sparc_store_inferior_registers;
-  t->to_can_use_hw_breakpoint = sparc_can_use_hw_breakpoint; 		//added by David Wilkins
-
+  t->to_can_use_hw_breakpoint = sparc_linux_can_use_hw_breakpoint; 		//added by David Wilkins
+  t->to_insert_hw_breakpoint = sparc_linux_insert_hw_breakpoint; 		//added by David Wilkins
+  t->to_remove_hw_breakpoint = sparc_linux_remove_hw_breakpoint; 		//added by David Wilkins
   /* Register the target.  */
   linux_nat_add_target (t);
 }

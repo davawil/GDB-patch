@@ -325,17 +325,6 @@ sparc_xfer_partial (struct target_ops *ops, enum target_object object,
   return inf_ptrace_xfer_partial (ops, object, annex, readbuf, writebuf,
 				  offset, len, xfered_len);
 }
-
-/*Added by David Wilkins*/
-
-static int sparc_can_use_hw_breakpoint (struct target_ops *,
-				     enum bptype, int, int);
-static 
-int sparc_can_use_hw_breakpoint (struct target_ops *t,
-			enum bptype arg1, int arg2, int arg3)
-{
-		return 1;				 
-}
 
 /* Create a prototype generic SPARC target.  The client can override
    it with local methods.  */
@@ -348,7 +337,6 @@ sparc_target (void)
   t = inf_ptrace_target ();
   t->to_fetch_registers = sparc_fetch_inferior_registers;
   t->to_store_registers = sparc_store_inferior_registers;
-  t->to_can_use_hw_breakpoint = sparc_can_use_hw_breakpoint; 		//added by David Wilkins
   inf_ptrace_xfer_partial = t->to_xfer_partial;
   t->to_xfer_partial = sparc_xfer_partial;
   return t;

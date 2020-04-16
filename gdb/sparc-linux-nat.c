@@ -61,11 +61,12 @@ fill_fpregset (const struct regcache *regcache,
   sparc32_collect_fpregset (sparc_fpregmap, regcache, regnum, fpregs);
 }
 
-/*Added by David Wilkins*/
+/*Added by David Wilkins----->*/
 
 struct sparc_linux_hw_breakpoint{
 	unsigned int address;
 	enum target_hw_bp_type type;
+	int execute;
 	//add control bits
 };
 
@@ -90,21 +91,19 @@ static
 int sparc_linux_insert_hw_breakpoint (struct target_ops *ops,
 				     struct gdbarch *arch, struct bp_target_info *info)
 {
-	
+	/*TODO: check if */
   struct sparc_linux_hw_breakpoint bp;
   int inf_pid;
   int r = 1;
-  printf("insert1\n");
   CORE_ADDR address = sparc_place_addr(info->reqstd_address);
   info->placed_address = address;
+  //info->placed_size = 4;			//unsure if correct
   bp.address = (unsigned int) address;
-  bp.type = hw_execute;
-  
+  //bp.type = hw_execute;
   inf_pid = ptid_get_pid(inferior_ptid);
+  printf("insert (%x) pid: %d\n", (unsigned int)address, inf_pid);
   //use address br_address and type as data
-  printf("insert2\n");
   r = ptrace(PTRACE_SETHBREGS, inf_pid, bp.address, hw_execute);
-  printf("insert3\n");
   return r;
 }
 
@@ -114,9 +113,40 @@ static
 int sparc_linux_remove_hw_breakpoint (struct target_ops *ops,
 				     struct gdbarch *arch, struct bp_target_info *info)
 {
-		return 1;				 
+	/*make changes to info fields?*/
+	int inf_pid;
+	unsigned int address = (unsigned int) info->placed_address;
+	printf("remove (%x) pid: %d\n", address, inf_pid);
+	inf_pid = ptid_get_pid(inferior_ptid);
+	
+	ptrace(PTRACE_SETHBREGS, inf_pid, address , 4);
+	return 0;				 
 }
 
+static void
+sparc_linux_prepare_to_resume (struct lwp_info *lwp){
+	printf("prepare to resume\n");
+}
+static void
+sparc_linux_forget_process (pid_t pid){
+	/*remove breakpoints */
+	printf("forget process\n");
+}
+
+/*
+static void
+sparc_linux_new_thread (struct lwp_info *lp){
+	/ Handle thread creation.  We need to copy the breakpoints and watchpoints
+   in the parent thread to the child thread. /
+}
+*/
+/*
+static void
+arm_linux_new_fork (struct lwp_info *parent, pid_t child_pid){
+	/ linux_nat_new_fork hook.  /
+}
+*/
+/*<-----added by david wilkins*/
 void _initialize_sparc_linux_nat (void);
 
 void
@@ -137,4 +167,11 @@ _initialize_sparc_linux_nat (void)
   t->to_remove_hw_breakpoint = sparc_linux_remove_hw_breakpoint; 		//added by David Wilkins
   /* Register the target.  */
   linux_nat_add_target (t);
+  
+  
+  //linux_nat_set_new_thread (t, sparc_linux_new_thread);					//added by David WIlkins
+  linux_nat_set_prepare_to_resume (t, sparc_linux_prepare_to_resume);	//added by David Wilkins
+  
+ // linux_nat_set_new_fork (t, sparc_linux_new_fork);						//added by David WIlkins
+  linux_nat_set_forget_process (t, sparc_linux_forget_process);			//added by David Wilkins
 }

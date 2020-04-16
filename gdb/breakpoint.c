@@ -13836,7 +13836,6 @@ delete_breakpoint (struct breakpoint *bpt)
      was chosen.  */
   if (bpt->type == bp_none)
     return;
-
   /* At least avoid this stale reference until the reference counting
      of breakpoints gets resolved.  */
   if (bpt->related_breakpoint != bpt)

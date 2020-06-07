@@ -1688,6 +1688,9 @@ sparc32_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_num_pseudo_regs (gdbarch, SPARC32_NUM_PSEUDO_REGS);
   set_gdbarch_pseudo_register_read (gdbarch, sparc32_pseudo_register_read);
   set_gdbarch_pseudo_register_write (gdbarch, sparc32_pseudo_register_write);
+  
+  /* Watchpoints are not steppable.  */
+  set_gdbarch_have_nonsteppable_watchpoint (gdbarch, 1);
 
   /* Register numbers of various important registers.  */
   set_gdbarch_sp_regnum (gdbarch, SPARC_SP_REGNUM); /* %sp */
